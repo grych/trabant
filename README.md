@@ -1,6 +1,6 @@
 # Trabant
 
-This is a version 2.0 of [Drab](https://github.com/grych/drab), Access the browser User Interface from the Server Side. No Javascript programming needed anymore!
+This is a version 2.0 of [Drab](https://github.com/grych/drab), access the browser User Interface from the Server Side. No Javascript programming needed anymore!
 
 ## This is a very beta version of the project
 

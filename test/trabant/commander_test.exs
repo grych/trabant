@@ -1,4 +1,4 @@
-defmodule TrabantTest do
+defmodule CommanderTest do
   use ExUnit.Case
   alias Trabant.Commander
   doctest Trabant.Commander

@@ -38,7 +38,7 @@ defmodule Trabant do
       func == "do_click" ->
         commander = payload["commander"]
         {:ok, params} = Jason.decode(payload["params"])
-        # socket = socket.commander # |> Keyword.merge([commander: commander])
+
         string = String.split(commander, ".")
 
         func_name =
@@ -51,25 +51,6 @@ defmodule Trabant do
           string
           |> List.delete_at(-1)
           |> Module.concat()
-
-        # Logger.error("PARAMS: " <> inspect((params)))
-
-        # params_to_send = for param <- params do
-        #   if length(param) == 3 do
-        #     [head, second, third | _tail]  = param
-        #     %{id: head, value: second, trabant_attribute: third}
-        #   else
-        #     %{}
-        #   end
-        # end
-
-        # params_to_send = Enum.map(params,
-        #   fn param -> [head, second, third | _tail] = param
-        #     %{id: head, value: second, trabant_attribute: third}
-        #   end
-        # )
-        # params_to_send = Enum.map(params, fn x -> x end)
-        # Logger.error(params)
 
         # running the commander
         spawn(module_name, func_name, [socket, params])

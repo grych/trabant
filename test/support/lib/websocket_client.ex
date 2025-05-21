@@ -17,23 +17,8 @@ defmodule TrabantTestApp.WebsocketClient do
     {:ok, socket}
   end
 
-  # def handle_frame({:text, "Can you please reply yourself?" = msg}, :fake_state) do
-  #   Logger.info("Received Message: #{msg}")
-  #   msg = "Sure can!"
-  #   Logger.info("Sending message: #{msg}")
-  #   {:reply, {:text, msg}, :fake_state}
-  # end
-  # def handle_frame({:text, "Close the things!" = msg}, :fake_state) do
-  #   Logger.info("Received Message: #{msg}")
-  #   {:close, :fake_state}
-  # end
-  # def handle_frame({:text, msg}, :fake_state) do
-  #   Logger.info("Received Message: #{msg}")
-  #   {:ok, :fake_state}
-  # end
-
-  def handle_disconnect(%{reason: {:local, reason}}, state) do
-    Logger.info("Local close with reason: #{inspect(reason)}")
+  def handle_disconnect(%{reason: {:local, _reason}}, state) do
+    # Logger.info("Local close with reason: #{inspect(reason)}")
     {:ok, state}
   end
 

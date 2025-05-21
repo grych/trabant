@@ -23,7 +23,7 @@ defmodule Trabant.Core do
       transport_pid,
       {Jason.encode!(%{
          function: "exec_js",
-         output: json,
+         input: json,
          process_id: :erlang.pid_to_list(self())
        }), [opcode: :text]},
       []
