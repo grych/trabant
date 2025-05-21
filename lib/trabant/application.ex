@@ -7,8 +7,13 @@ defmodule Trabant.Application do
 
   def start(_type, _args) do
     # List all child processes to be supervised
+    trabant_http = Application.fetch_env!(:trabant, :http)
     children = [
-      {Bandit, plug: Trabant.Router},
+      {Bandit, plug: Trabant.Router,
+        scheme: trabant_http[:scheme],
+        ip: trabant_http[:ip],
+        port: trabant_http[:port]
+      },
       {Phoenix.PubSub, name: Trabant.PubSub}
       #  Registry.child_spec(
       #   keys: :duplicate,

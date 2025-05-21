@@ -13,7 +13,7 @@ defmodule Trabant do
   def init(_opts) do
     # |> Keyword.merge([pid: self()])
     socket = %Trabant.Socket{topic: "user:*", pid: self()}
-    Logger.info("INIT: #{inspect(socket)}")
+    # Logger.info("INIT: #{inspect(socket)}")
     # for broadcasting:
     # Keyword.get(socket, :topic))
     Phoenix.PubSub.subscribe(Trabant.PubSub, socket.topic)
@@ -23,10 +23,7 @@ defmodule Trabant do
 
   @impl true
   def handle_in({json, [opcode: :text]}, socket) do
-    # Logger.debug("socket in handle_in: #{inspect(socket)}")
-    # Logger.error(json)
     {:ok, payload} = Jason.decode(json)
-    # Logger.error(payload)
     func = payload["function"]
 
     cond do

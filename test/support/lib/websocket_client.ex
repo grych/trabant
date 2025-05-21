@@ -30,7 +30,7 @@ defmodule TrabantTestApp.WebsocketClient do
     # Logger.debug(inspect(Jason.decode!(json)))
     payload = Jason.decode!(json)
     other_pid = :erlang.list_to_pid(payload["process_id"])
-    Process.send(other_pid, payload["output"], [])
+    Process.send(other_pid, payload["input"], [])
     {:ok, socket}
   end
 end
