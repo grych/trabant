@@ -38,6 +38,9 @@ defmodule Trabant.Commander do
     {:ok, _value} = Trabant.Element.set_prop socket, "#my-div", innerText: output
     # Logger.debug("VALUE: #{inspect(value)}")
 
+    # {:ok, value} = Trabant.Element.set_prop socket, "input", style: %{"backgroundColor" => "red", "width" => "200px"}
+    # Logger.debug("VALUE: #{inspect(value)}")
+
     {:ok, socket}
   end
 end

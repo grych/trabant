@@ -1,7 +1,7 @@
 import Config
 
 config :trabant,
-  http: [scheme: :http, port: 4000, ip: {127, 0, 0, 1}]
+  http: [scheme: :http, port: 4000, host: "localhost"]
 
 config :trabant,
   browser_timeout: 5_000
