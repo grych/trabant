@@ -47,23 +47,24 @@ defmodule Trabant.LiveEngine do
 
   @impl true
   def handle_body(state) do
-    # IO.inspect("BODY1 " <> inspect(state))
+    IO.inspect("BODY1 " <> inspect(state))
     %{binary: binary, dynamic: dynamic} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
-    # IO.inspect("BODY2 " <> inspect({:__block__, [], Enum.reverse(dynamic)}), pretty: true)
+    IO.inspect("BODY2 " <> inspect(state))
+    IO.inspect("BODY3 " <> inspect({:__block__, [], Enum.reverse(dynamic)}), pretty: true)
     {:__block__, [], Enum.reverse(dynamic)}
   end
 
   @impl true
   def handle_begin(state) do
-    # IO.inspect("BEGIN " <> state)
+    IO.inspect("BEGIN " <> state)
     state
   end
 
   @impl true
   def handle_end(state) do
-    # IO.inspect("END " <> state)
+    IO.inspect("END " <> state)
     state
   end
 
@@ -72,7 +73,7 @@ defmodule Trabant.LiveEngine do
   def handle_text(state, _meta, text) do
     # check_state!(state)
     %{binary: binary} = state
-    # IO.inspect("TEXT " <> inspect(state))
+    IO.inspect("TEXT " <> inspect(state))
     %{state | binary: [text | binary]}
   end
 
@@ -95,7 +96,7 @@ defmodule Trabant.LiveEngine do
         unquote(var) :: binary
       end
 
-    # IO.inspect("AFTER: " <> inspect(%{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}))
+    IO.inspect("AFTER EXPR: " <> inspect(%{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}))
     %{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}
   end
 

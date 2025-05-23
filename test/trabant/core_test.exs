@@ -1,4 +1,4 @@
-defmodule CoreTest do
+defmodule Trabant.CoreTest do
   use ExUnit.Case, async: true
   alias Trabant.Core
   doctest Trabant.Core

@@ -1,4 +1,4 @@
-defmodule LiveEngineTest do
+defmodule Trabant.LiveEngineTest do
   use ExUnit.Case
   require Logger
   require EEx
