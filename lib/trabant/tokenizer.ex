@@ -256,16 +256,18 @@ defmodule Trabant.Tokenizer do
       buffer
       |> tokenize()
       |> deep_reverse()
+      # |> Enum.reverse()
       |> do_inject(attribute, [], :not_found, [])
 
     acc = acc |> deep_reverse() |> tokenized_to_html()
+    # acc = acc |> tokenized_to_html()
 
     case found do
       :not_found -> {:not_found, acc, attribute}
       other when other == attribute ->
-        # Logger.debug(inspect(other))
+        Logger.debug("FOUND " <> inspect(other))
         {:ok, acc, attribute}
-      _ -> Logger.debug(inspect(acc))
+      _ -> Logger.debug("ALREADY THERE " <> inspect(acc))
         {:already_there, acc, found}
     end
   end
@@ -502,15 +504,15 @@ defmodule Trabant.Tokenizer do
   end
 
   @doc """
-  Gets the attribute hash from "drab-ampere="ampere_hash" string.
+  Gets the attribute hash from "trabant-ampere="ampere_hash" string.
 
-      iex> extract_ampere_hash(~s/drab-ampere="giydcmrsgy4tsnbx"/)
+      iex> extract_ampere_hash(~s/trabant_ampere="giydcmrsgy4tsnbx"/)
       "giydcmrsgy4tsnbx"
       iex> extract_ampere_hash("anything else")
       nil
   """
   def extract_ampere_hash(attribute) do
-    captures = Regex.named_captures(~r/drab-ampere="(?<ampere>\S+)"/, attribute)
+    captures = Regex.named_captures(~r/trabant_ampere="(?<ampere>\S+)"/, attribute)
     captures["ampere"]
   end
 
@@ -535,9 +537,9 @@ defmodule Trabant.Tokenizer do
     list
     |> Enum.reverse()
     |> Enum.map(fn
-      {:__block__, [], [{:=, [], [{tmp, [], Drab.Live.EExEngine} | buffer]} | rest]} ->
+      {:__block__, [], [{:=, [], [{tmp, [], Trabant.LiveEngine} | buffer]} | rest]} ->
         {:__block__, [],
-         [{:=, [], [{tmp, [], Drab.Live.EExEngine} | deep_reverse(buffer)]} | deep_reverse(rest)]}
+         [{:=, [], [{tmp, [], Trabant.LiveEngine} | deep_reverse(buffer)]} | deep_reverse(rest)]}
 
       x when is_list(x) ->
         deep_reverse(x)

@@ -82,28 +82,30 @@ defmodule Trabant.LiveEngine do
     IO.inspect("EXPRESSION " <> inspect(ast))
     ast = Macro.prewalk(ast, &EEx.Engine.handle_assign/1)
 
+    line = line_from_expr(ast)
+
     # EEx.Engine.handle_expr(state, "=", expr)
     %{binary: binary, dynamic: dynamic, vars_count: vars_count} = state
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
 
-    ampere_id = Trabant.Tokenizer.hash(state)
-    # ampere_id = "6"
+    ampere_id = Trabant.Tokenizer.hash({state, ast})
+    Logger.debug(ampere_id)
     attribute = "trabant_ampere=\"#{ampere_id}\""
 
-    {binary, _ampere_id} = case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, attribute) do
+    binary = case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, attribute) do
       # injected!
-      {:ok, buf, amp} ->
-        {buf, Trabant.Tokenizer.extract_ampere_hash(amp)}
+      {:ok, buf, _amp} ->
+        buf
 
       # it was already there
-      {:already_there, _, amp} ->
-        Logger.error("ALRETY THERE " <> inspect(attribute))
-        {binary, Trabant.Tokenizer.extract_ampere_hash(amp)}
+      {:already_there, _, _amp} ->
+        # Logger.error("ALRETY THERE " <> inspect(Trabant.Tokenizer.extract_ampere_hash(amp)))
+        binary
 
       {:not_found, _, _} ->
         raise EEx.SyntaxError,
           message: """
-          can't find the parent tag for an expression in line #{}.
+          can't find the parent tag for an expression in line #{line}.
           """
     end
     Logger.error("EXPRESSION " <> inspect(binary))
@@ -127,4 +129,7 @@ defmodule Trabant.LiveEngine do
     expr = Macro.prewalk(expr, &EEx.Engine.handle_assign/1)
     EEx.Engine.handle_expr(state, marker, expr)
   end
+
+  defp line_from_expr({_, meta, _}) when is_list(meta), do: Keyword.get(meta, :line)
+  defp line_from_expr(_), do: nil
 end
