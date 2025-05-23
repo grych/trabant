@@ -47,24 +47,24 @@ defmodule Trabant.LiveEngine do
 
   @impl true
   def handle_body(state) do
-    IO.inspect("BODY1 " <> inspect(state))
+    # IO.inspect("BODY1 " <> inspect(state))
     %{binary: binary, dynamic: dynamic} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
-    IO.inspect("BODY2 " <> inspect(state))
-    IO.inspect("BODY3 " <> inspect({:__block__, [], Enum.reverse(dynamic)}), pretty: true)
+    # IO.inspect("BODY2 " <> inspect(state))
+    # IO.inspect("BODY3 " <> inspect({:__block__, [], Enum.reverse(dynamic)}), pretty: true)
     {:__block__, [], Enum.reverse(dynamic)}
   end
 
   @impl true
   def handle_begin(state) do
-    IO.inspect("BEGIN " <> state)
+    # IO.inspect("BEGIN " <> state)
     state
   end
 
   @impl true
   def handle_end(state) do
-    IO.inspect("END " <> state)
+    # IO.inspect("END " <> state)
     state
   end
 
@@ -73,18 +73,40 @@ defmodule Trabant.LiveEngine do
   def handle_text(state, _meta, text) do
     # check_state!(state)
     %{binary: binary} = state
-    IO.inspect("TEXT " <> inspect(state))
+    # IO.inspect("TEXT " <> inspect(state))
     %{state | binary: [text | binary]}
   end
 
   @impl true
   def handle_expr(state, "=", ast) do
-    # IO.inspect("EXPR ESSION " <> inspect(ast))
+    IO.inspect("EXPRESSION " <> inspect(ast))
     ast = Macro.prewalk(ast, &EEx.Engine.handle_assign/1)
 
     # EEx.Engine.handle_expr(state, "=", expr)
     %{binary: binary, dynamic: dynamic, vars_count: vars_count} = state
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
+
+    ampere_id = Trabant.Tokenizer.hash(state)
+    # ampere_id = "6"
+    attribute = "trabant_ampere=\"#{ampere_id}\""
+
+    {binary, _ampere_id} = case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, attribute) do
+      # injected!
+      {:ok, buf, amp} ->
+        {buf, Trabant.Tokenizer.extract_ampere_hash(amp)}
+
+      # it was already there
+      {:already_there, _, amp} ->
+        Logger.error("ALRETY THERE " <> inspect(attribute))
+        {binary, Trabant.Tokenizer.extract_ampere_hash(amp)}
+
+      {:not_found, _, _} ->
+        raise EEx.SyntaxError,
+          message: """
+          can't find the parent tag for an expression in line #{}.
+          """
+    end
+    Logger.error("EXPRESSION " <> inspect(binary))
 
     ast =
       quote do
