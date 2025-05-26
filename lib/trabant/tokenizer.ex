@@ -244,6 +244,12 @@ defmodule Trabant.Tokenizer do
 
     iex> inject_attribute_to_last_opened ["<tag attr=42 1><tag 2><tag 3></tag>", "</tag>"], "attr=x"
     {:already_there, ["<tag attr=42 1><tag 2><tag 3></tag>", "</tag>"], "attr=42"}
+
+    iex> inject_attribute_to_last_opened ["<span>"], "trabant_ampere=a"
+    {:ok, ["<span trabant_ampere=a>"], "trabant_ampere=a"}
+
+    iex> inject_attribute_to_last_opened ["<p>", "<span trabant_ampere=a>"], "trabant_ampere=b"
+    {:already_there, ["<p>", "<span trabant_ampere=a>"], "trabant_ampere=a"}
   """
   def inject_attribute_to_last_opened(buffer, attribute) when is_tuple(buffer) do
     # in case when there is no text between expressions
@@ -259,26 +265,41 @@ defmodule Trabant.Tokenizer do
       # |> Enum.reverse()
       |> do_inject(attribute, [], :not_found, [])
 
-    acc = acc |> deep_reverse() |> tokenized_to_html()
-    # acc = acc |> tokenized_to_html()
+    acc =
+      acc
+      |> deep_reverse()
+      |> tokenized_to_html()
+    # acc = acc |> Enum.reverse() |> tokenized_to_html()
+
+    # Logger.error("Found: " <> inspect(found))
+    # Logger.error("acc: " <> inspect(acc))
+
 
     case found do
       :not_found -> {:not_found, acc, attribute}
       other when other == attribute ->
-        Logger.debug("FOUND " <> inspect(other))
+        # Logger.debug("FOUND " <> inspect(acc))
         {:ok, acc, attribute}
-      _ -> Logger.debug("ALREADY THERE " <> inspect(acc))
+      _other -> # Logger.debug("ALREADY THERE " <> inspect(acc) <> " " <> inspect(attribute) <> " " <> inspect(other))
         {:already_there, acc, found}
     end
   end
 
   defp do_inject([], _, opened, found, acc) do
+    # Logger.error("do inject " <> inspect(found))
+    # Logger.error("do inject " <> inspect(acc))
     {opened, found, acc}
   end
 
   defp do_inject([head | tail], attribute, closed, found, acc) do
     case head do
       %Trabant.Tokenizer{} = tokenized_html ->
+        # Logger.error("AAA " <> inspect(tail))
+        # Logger.error(inspect(attribute))
+        # Logger.error(inspect(closed))
+        # Logger.error(inspect(found))
+        # Logger.error(inspect(acc ++ [head]))
+
         {cls, fnd, tkn} = inject_to_html(tokenized_html, attribute, closed, found)
         do_inject(tail, attribute, cls, fnd, acc ++ [tkn])
 
@@ -291,10 +312,17 @@ defmodule Trabant.Tokenizer do
         do_inject(tail, attribute, op, fd, acc ++ [modified_buffer])
 
       list when is_list(list) ->
+        # Logger.error("BBB " <> inspect(list))
         {op, fd, modified_buffer} = do_inject(list, attribute, closed, found, [])
         do_inject(tail, attribute, op, fd, acc ++ [modified_buffer])
 
       _ ->
+        # Logger.error("CCC " <> inspect(tail))
+        # Logger.error(inspect(attribute))
+        # Logger.error(inspect(closed))
+        # Logger.error(inspect(found))
+        # Logger.error(inspect(acc ++ [head]))
+
         do_inject(tail, attribute, closed, found, acc ++ [head])
     end
   end
@@ -404,15 +432,30 @@ defmodule Trabant.Tokenizer do
   """
   def inject_to_html(%Trabant.Tokenizer{tokenized: tokenized_html}, attr, closed \\ [], found \\ :not_found) do
     tokens = Enum.reverse(tokenized_html)
+    # tokens = Enum.reverse(tokens)
+    # Logger.info("before " <> inspect(found) <> inspect(tokens) <> inspect(attr))
 
     {closed, found, acc} =
       Enum.reduce(tokens, {closed, found, []}, fn
         # move on, if already found
         token, {closed, found, acc} when is_binary(found) ->
-          {closed, found, [token | acc]}
+          # Logger.info("B    " <> inspect(found))
+          # Logger.info("B    " <> inspect(acc))
+          # Logger.info("Btoken    " <> inspect(token))
+
+          # Logger.info("BB    " <> inspect(found))
+        # case token do
+        #   {:tag, _tag} ->
+        #     inject_attribute(token, closed, attr, acc)
+        #   _ ->
+            {closed, found, [token | acc]}
+        # end
+
+          # inject_attribute(token, closed, attr, acc)
 
         # if there is a naked tag, inject there
         {:naked, _tag} = token, {closed, :not_found, acc} ->
+          # Logger.info("C     " <> inspect(found))
           inject_attribute(token, closed, attr, acc)
 
         # move on if this is non closing tag
@@ -425,10 +468,12 @@ defmodule Trabant.Tokenizer do
 
         # the list of closed tags in empty, we may inject here
         {:tag, _tag} = token, {[], :not_found, acc} ->
+          # Logger.info("D    " <> inspect(found))
           inject_attribute(token, [], attr, acc)
 
         # there are closed tag
         {:tag, tag} = token, {closed, :not_found, acc} ->
+          # Logger.info("E    " <> inspect(found))
           if tag_name(tag) in closed do
             # was closed before, ignoring
             {closed -- [tag_name(tag)], :not_found, [token | acc]}
@@ -437,13 +482,16 @@ defmodule Trabant.Tokenizer do
           end
 
         token, {closed, found, acc} ->
+          # Logger.info("F  " <> inspect(found))
           {closed, found, [token | acc]}
       end)
 
+    # Logger.info(" hmm " <> inspect(found) <> inspect(closed) <> inspect(acc))
     {closed, found, %Trabant.Tokenizer{tokenized: acc}}
   end
 
   defp inject_attribute({gender, tag} = token, closed, attribute, acc) do
+    # Logger.debug(inspect(attribute))
     case find_attribute(tag, attribute) do
       # attribute not found, do inject and return injected
       nil ->
@@ -460,6 +508,9 @@ defmodule Trabant.Tokenizer do
 
       iex> add_attribute("tag tag=2", "attr=1")
       "tag attr=1 tag=2"
+
+      iex> add_attribute("tag attr=2", "attr=1")
+      "tag attr=1 attr=2"
   """
   @spec add_attribute(String.t(), String.t()) :: String.t()
   def add_attribute(tag, attribute) do
@@ -479,6 +530,9 @@ defmodule Trabant.Tokenizer do
       nil
 
       iex> find_attribute("tag attrx = 1 attr = '2' attra= 4 ", "attr = 3")
+      "attr='2'"
+
+      iex> find_attribute("tag attrx attr='2'", "attr = 3")
       "attr='2'"
   """
   @spec find_attribute(String.t(), String.t()) :: String.t() | nil
@@ -518,7 +572,7 @@ defmodule Trabant.Tokenizer do
 
 
   @doc """
-  Deep reverse of the list
+  Deep reverse of the list.
 
       iex> deep_reverse [1,2,3]
       [3,2,1]
@@ -531,8 +585,11 @@ defmodule Trabant.Tokenizer do
 
       iex> deep_reverse [1, [2, 3], 4]
       [4, [3, 2], 1]
+
+      iex> deep_reverse ["<p>", {:"::", [], [{:arg0, [], Trabant.LiveEngine}, {:binary, [], Trabant.LiveEngine}]}, "<span trabant_ampere=a>"]
+      ["<span trabant_ampere=a>", {:"::", [], [{:arg0, [], Trabant.LiveEngine}, {:binary, [], Trabant.LiveEngine}]}, "<p>"]
   """
-  @spec deep_reverse(list) :: list
+  # @spec deep_reverse(list) :: list
   def deep_reverse(list) do
     list
     |> Enum.reverse()
