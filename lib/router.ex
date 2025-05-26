@@ -12,7 +12,7 @@ defmodule Trabant.Router do
     send_resp(
       conn,
       200,
-      EEx.eval_file("lib/html/index.html.eex", abc1: "DEF", assigns: conn.assigns)
+      EEx.eval_file("lib/html/index.html.eex", [abc1: "DEF", assigns: conn.assigns], engine: Trabant.LiveEngine)
     )
   end
 

@@ -12,6 +12,7 @@
   <div id="my-div" trabant="my-div">Answer to the question</div>
   <br>
   <input type="submit" value="click to send for the answer" id="my-button" trabant="click:Trabant.Commander.button_click">
+  <span><%= @to_do %></span>
 </body>
 
 <script>

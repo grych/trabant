@@ -38,6 +38,18 @@ defmodule Trabant.LiveEngine do
   @impl true
   def init(_opts) do
     # IO.inspect("INIT " <> inspect(opts))
+    # unless opts[:file]
+    #   |> Path.basename("eex")
+    #   |> Path.extname()
+    #   |> String.downcase() == ".html" do
+    #     raise EEx.SyntaxError,
+    #     message: """
+    #     Trabant.LiveEngine works only with html partials.
+
+    #     Invalid extention of file: #{opts[:file]}.
+    #     """
+    # end
+
     %{
       binary: [],
       dynamic: [],
@@ -52,19 +64,16 @@ defmodule Trabant.LiveEngine do
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
     # IO.inspect("BODY2 " <> inspect(state))
-    # IO.inspect("BODY3 " <> inspect({:__block__, [], Enum.reverse(dynamic)}), pretty: true)
     {:__block__, [], Enum.reverse(dynamic)}
   end
 
   @impl true
   def handle_begin(state) do
-    # IO.inspect("BEGIN " <> state)
     state
   end
 
   @impl true
   def handle_end(state) do
-    # IO.inspect("END " <> state)
     state
   end
 
@@ -79,10 +88,7 @@ defmodule Trabant.LiveEngine do
 
   @impl true
   def handle_expr(state, "=", ast) do
-    # IO.inspect("EXPRESSION " <> inspect(ast))
-
     found_assigns = find_assigns(ast)
-    # Logger.info("ASSIGNS: " <> inspect(found_assigns))
 
     ast = Macro.prewalk(ast, &EEx.Engine.handle_assign/1)
     line = line_from_expr(ast)
@@ -93,13 +99,8 @@ defmodule Trabant.LiveEngine do
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
 
     ampere_id = Trabant.Tokenizer.hash(state)
-    # Logger.debug(inspect(:rand.uniform(100)))
     ampere_attribute = "trabant_ampere=\"#{ampere_id}\""
 
-    # Logger.info("BINARY: " <> inspect(binary))
-    # Logger.info("ampere_attribute: " <> inspect(ampere_attribute))
-    # binary = Trabant.Tokenizer.deep_reverse(binary)
-    # Logger.info("state: " <> inspect(state))
     binary = Trabant.Tokenizer.deep_reverse(binary)
     binary = if found_assigns != [] do
       case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, ampere_attribute) do
@@ -109,7 +110,6 @@ defmodule Trabant.LiveEngine do
 
         # it was already there
         {:already_there, _, _amp} ->
-          # Logger.error("ALREADY THERE " <> inspect(Trabant.Tokenizer.extract_ampere_hash(amp)))
           binary
 
         {:not_found, _, _} ->
@@ -121,8 +121,6 @@ defmodule Trabant.LiveEngine do
     else
       binary
     end
-    # binary = Trabant.Tokenizer.deep_reverse(binary)
-    # Logger.error("EXPRESSION " <> inspect(binary))
     binary = Trabant.Tokenizer.deep_reverse(binary)
 
     ast =
@@ -135,12 +133,10 @@ defmodule Trabant.LiveEngine do
         unquote(var) :: binary
       end
 
-    # IO.inspect("AFTER EXPR: " <> inspect(%{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}))
     %{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}
   end
 
   def handle_expr(state, marker, expr) do
-    # IO.inspect("EXPR " <> inspect(expr))
     expr = Macro.prewalk(expr, &EEx.Engine.handle_assign/1)
     EEx.Engine.handle_expr(state, marker, expr)
   end

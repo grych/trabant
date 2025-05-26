@@ -262,25 +262,18 @@ defmodule Trabant.Tokenizer do
       buffer
       |> tokenize()
       |> deep_reverse()
-      # |> Enum.reverse()
       |> do_inject(attribute, [], :not_found, [])
 
     acc =
       acc
       |> deep_reverse()
       |> tokenized_to_html()
-    # acc = acc |> Enum.reverse() |> tokenized_to_html()
-
-    # Logger.error("Found: " <> inspect(found))
-    # Logger.error("acc: " <> inspect(acc))
-
 
     case found do
       :not_found -> {:not_found, acc, attribute}
       other when other == attribute ->
-        # Logger.debug("FOUND " <> inspect(acc))
         {:ok, acc, attribute}
-      _other -> # Logger.debug("ALREADY THERE " <> inspect(acc) <> " " <> inspect(attribute) <> " " <> inspect(other))
+      _other ->
         {:already_there, acc, found}
     end
   end
@@ -294,12 +287,6 @@ defmodule Trabant.Tokenizer do
   defp do_inject([head | tail], attribute, closed, found, acc) do
     case head do
       %Trabant.Tokenizer{} = tokenized_html ->
-        # Logger.error("AAA " <> inspect(tail))
-        # Logger.error(inspect(attribute))
-        # Logger.error(inspect(closed))
-        # Logger.error(inspect(found))
-        # Logger.error(inspect(acc ++ [head]))
-
         {cls, fnd, tkn} = inject_to_html(tokenized_html, attribute, closed, found)
         do_inject(tail, attribute, cls, fnd, acc ++ [tkn])
 
@@ -312,17 +299,10 @@ defmodule Trabant.Tokenizer do
         do_inject(tail, attribute, op, fd, acc ++ [modified_buffer])
 
       list when is_list(list) ->
-        # Logger.error("BBB " <> inspect(list))
         {op, fd, modified_buffer} = do_inject(list, attribute, closed, found, [])
         do_inject(tail, attribute, op, fd, acc ++ [modified_buffer])
 
       _ ->
-        # Logger.error("CCC " <> inspect(tail))
-        # Logger.error(inspect(attribute))
-        # Logger.error(inspect(closed))
-        # Logger.error(inspect(found))
-        # Logger.error(inspect(acc ++ [head]))
-
         do_inject(tail, attribute, closed, found, acc ++ [head])
     end
   end
@@ -432,26 +412,11 @@ defmodule Trabant.Tokenizer do
   """
   def inject_to_html(%Trabant.Tokenizer{tokenized: tokenized_html}, attr, closed \\ [], found \\ :not_found) do
     tokens = Enum.reverse(tokenized_html)
-    # tokens = Enum.reverse(tokens)
-    # Logger.info("before " <> inspect(found) <> inspect(tokens) <> inspect(attr))
-
     {closed, found, acc} =
       Enum.reduce(tokens, {closed, found, []}, fn
         # move on, if already found
         token, {closed, found, acc} when is_binary(found) ->
-          # Logger.info("B    " <> inspect(found))
-          # Logger.info("B    " <> inspect(acc))
-          # Logger.info("Btoken    " <> inspect(token))
-
-          # Logger.info("BB    " <> inspect(found))
-        # case token do
-        #   {:tag, _tag} ->
-        #     inject_attribute(token, closed, attr, acc)
-        #   _ ->
             {closed, found, [token | acc]}
-        # end
-
-          # inject_attribute(token, closed, attr, acc)
 
         # if there is a naked tag, inject there
         {:naked, _tag} = token, {closed, :not_found, acc} ->
@@ -468,12 +433,10 @@ defmodule Trabant.Tokenizer do
 
         # the list of closed tags in empty, we may inject here
         {:tag, _tag} = token, {[], :not_found, acc} ->
-          # Logger.info("D    " <> inspect(found))
           inject_attribute(token, [], attr, acc)
 
         # there are closed tag
         {:tag, tag} = token, {closed, :not_found, acc} ->
-          # Logger.info("E    " <> inspect(found))
           if tag_name(tag) in closed do
             # was closed before, ignoring
             {closed -- [tag_name(tag)], :not_found, [token | acc]}
@@ -482,16 +445,13 @@ defmodule Trabant.Tokenizer do
           end
 
         token, {closed, found, acc} ->
-          # Logger.info("F  " <> inspect(found))
           {closed, found, [token | acc]}
       end)
 
-    # Logger.info(" hmm " <> inspect(found) <> inspect(closed) <> inspect(acc))
     {closed, found, %Trabant.Tokenizer{tokenized: acc}}
   end
 
   defp inject_attribute({gender, tag} = token, closed, attribute, acc) do
-    # Logger.debug(inspect(attribute))
     case find_attribute(tag, attribute) do
       # attribute not found, do inject and return injected
       nil ->
