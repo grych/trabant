@@ -39,7 +39,7 @@ defmodule Trabant.Element do
       set_prop socket, "#div1", value: ~E/<%=first_name%> <%=last_name%>/
   """
   def set_prop(socket, selector, properties) when is_list(properties) do
-    properties = properties |> Map.new
+    properties = properties |> Map.new()
     Trabant.Core.exec_js(socket, set_js(selector, properties))
   end
 

@@ -5,6 +5,5 @@ defmodule Trabant.CommanderTest do
   require Logger
 
   test "find_in_params" do
-
   end
 end

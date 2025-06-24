@@ -53,7 +53,8 @@ defmodule Trabant.LiveEngine do
     %{
       binary: [],
       dynamic: [],
-      vars_count: 0
+      vars_count: 0,
+      trabant_amperes: []
     }
   end
 
@@ -64,16 +65,26 @@ defmodule Trabant.LiveEngine do
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
     # IO.inspect("BODY2 " <> inspect(state))
-    {:__block__, [], Enum.reverse(dynamic)}
+    dynamic = Enum.reverse(dynamic)
+
+    # body = List.flatten(dynamic)
+    # Logger.debug(inspect(body))
+    # found_amperes = Trabant.Tokenizer.amperes_from_buffer(body)
+
+    # Logger.info(inspect(found_amperes))
+
+    {:__block__, [], dynamic}
   end
 
   @impl true
   def handle_begin(state) do
+    # Logger.debug(inspect(state))
     state
   end
 
   @impl true
   def handle_end(state) do
+    # Logger.debug(inspect(state))
     state
   end
 
@@ -94,7 +105,9 @@ defmodule Trabant.LiveEngine do
     line = line_from_expr(ast)
 
     # EEx.Engine.handle_expr(state, "=", expr)
-    %{binary: binary, dynamic: dynamic, vars_count: vars_count} = state
+    %{binary: binary, dynamic: dynamic, vars_count: vars_count, trabant_amperes: trabant_amperes} =
+      state
+
     # binary_first = List.first(binary)
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
 
@@ -102,25 +115,28 @@ defmodule Trabant.LiveEngine do
     ampere_attribute = "trabant_ampere=\"#{ampere_id}\""
 
     binary = Trabant.Tokenizer.deep_reverse(binary)
-    binary = if found_assigns != [] do
-      case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, ampere_attribute) do
-        # injected!
-        {:ok, buf, _amp} ->
-          buf
 
-        # it was already there
-        {:already_there, _, _amp} ->
-          binary
+    binary =
+      if found_assigns != [] do
+        case Trabant.Tokenizer.inject_attribute_to_last_opened(binary, ampere_attribute) do
+          # injected!
+          {:ok, buf, _amp} ->
+            buf
 
-        {:not_found, _, _} ->
-          raise EEx.SyntaxError,
-            message: """
-            can't find the parent tag for an expression in line #{line}.
-            """
+          # it was already there
+          {:already_there, _, _amp} ->
+            binary
+
+          {:not_found, _, _} ->
+            raise EEx.SyntaxError,
+              message: """
+              can't find the parent tag for an expression in line #{line}.
+              """
+        end
+      else
+        binary
       end
-    else
-      binary
-    end
+
     binary = Trabant.Tokenizer.deep_reverse(binary)
 
     ast =
@@ -133,7 +149,15 @@ defmodule Trabant.LiveEngine do
         unquote(var) :: binary
       end
 
-    %{state | dynamic: [ast | dynamic], binary: [segment | binary], vars_count: vars_count + 1}
+    # Logger.debug(inspect([%{ampere: ampere_id, ast: ast, assigns: found_assigns} | trabant_amperes]))
+
+    %{
+      state
+      | dynamic: [ast | dynamic],
+        binary: [segment | binary],
+        vars_count: vars_count + 1,
+        trabant_amperes: [%{ampere: ampere_id, ast: ast, assigns: found_assigns} | trabant_amperes]
+    }
   end
 
   def handle_expr(state, marker, expr) do

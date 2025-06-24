@@ -31,7 +31,8 @@ defmodule Trabant.MixProject do
       {:websock_adapter, "~> 0.5"},
       {:jason, "~> 1.4"},
       {:phoenix_pubsub, "~> 2.0"},
-      {:websockex, "~> 0.4"}
+      {:websockex, "~> 0.4"},
+      {:floki, "~> 0.37"}
       # {:telemetry, "~> 1.0"}
       # {:dialyxir, "~> 1.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},

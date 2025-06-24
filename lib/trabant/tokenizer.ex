@@ -207,7 +207,10 @@ defmodule Trabant.Tokenizer do
       true
   """
   def tokenized_to_html([]), do: []
-  def tokenized_to_html(%Trabant.Tokenizer{tokenized: tokenized}), do: Enum.join(htmlize(tokenized))
+
+  def tokenized_to_html(%Trabant.Tokenizer{tokenized: tokenized}),
+    do: Enum.join(htmlize(tokenized))
+
   def tokenized_to_html({code, meta, args}), do: {code, meta, tokenized_to_html(args)}
   def tokenized_to_html({atom, args}) when atom in @block, do: {atom, tokenized_to_html(args)}
   def tokenized_to_html([head | tail]), do: [tokenized_to_html(head) | tokenized_to_html(tail)]
@@ -270,9 +273,12 @@ defmodule Trabant.Tokenizer do
       |> tokenized_to_html()
 
     case found do
-      :not_found -> {:not_found, acc, attribute}
+      :not_found ->
+        {:not_found, acc, attribute}
+
       other when other == attribute ->
         {:ok, acc, attribute}
+
       _other ->
         {:already_there, acc, found}
     end
@@ -307,7 +313,7 @@ defmodule Trabant.Tokenizer do
     end
   end
 
-@doc """
+  @doc """
   Injects attribute to the last opened tag in tokenized html.
 
       iex> {_closed, "attr=1", tokenized} = inject_to_html tokenize("<tag>"), "attr=1"
@@ -410,13 +416,19 @@ defmodule Trabant.Tokenizer do
       iex> tokenized_to_html(tked)
       "<tag 1><tag 2><tag 3></tag></tag></tag>"
   """
-  def inject_to_html(%Trabant.Tokenizer{tokenized: tokenized_html}, attr, closed \\ [], found \\ :not_found) do
+  def inject_to_html(
+        %Trabant.Tokenizer{tokenized: tokenized_html},
+        attr,
+        closed \\ [],
+        found \\ :not_found
+      ) do
     tokens = Enum.reverse(tokenized_html)
+
     {closed, found, acc} =
       Enum.reduce(tokens, {closed, found, []}, fn
         # move on, if already found
         token, {closed, found, acc} when is_binary(found) ->
-            {closed, found, [token | acc]}
+          {closed, found, [token | acc]}
 
         # if there is a naked tag, inject there
         {:naked, _tag} = token, {closed, :not_found, acc} ->
@@ -530,7 +542,6 @@ defmodule Trabant.Tokenizer do
     captures["ampere"]
   end
 
-
   @doc """
   Deep reverse of the list.
 
@@ -565,6 +576,146 @@ defmodule Trabant.Tokenizer do
         x
     end)
   end
+
+  @doc """
+  Returns amperes and patterns from flat html.
+  Pattern is processed by Floki, so it doesn't have to be the same as original!
+  """
+  def amperes_from_buffer([]) do
+    %{}
+  end
+
+  def amperes_from_buffer([{atom, _, args} | tail]) when is_atom(atom) and is_list(args) do
+    Map.merge(amperes_from_buffer(args), amperes_from_buffer(tail))
+  end
+
+  def amperes_from_buffer([head | tail]) do
+    case head do
+      [{key, value}] when is_atom(key) ->
+        Map.merge(amperes_from_buffer(tail), amperes_from_buffer(value))
+
+      _ ->
+        amperes_from_buffer(tail)
+    end
+  end
+
+  def amperes_from_buffer({atom, _, args}) when is_atom(atom) and is_list(args) do
+    amperes_from_buffer(args)
+  end
+
+  def amperes_from_buffer({atom, _, _}) when is_atom(atom) do
+    %{}
+  end
+
+  def amperes_from_buffer({tuple, _, _}) when is_tuple(tuple) do
+    amperes_from_buffer(tuple)
+  end
+
+  def amperes_from_buffer(buffer) when is_list(buffer) do
+    buffer
+    |> to_flat_html()
+    |> amperes_from_html()
+
+    # |> Map.merge(amperes_from_buffer(buffer))
+    # Logger.debug(inspect(buffer))
+    # buffer
+  end
+
+  defp amperes_from_html(html) when is_binary(html) do
+    {:ok, document} = Floki.parse_document(html)
+
+    with_amperes =
+      document
+      |> Floki.find("[trabant-ampere]")
+
+    for {tag, attributes, inner_html} <- with_amperes, into: Map.new() do
+      ampere = find_ampere(attributes)
+
+      html_part =
+        if contains_expression?(inner_html),
+          do: [{:html, tag, "innerHTML", Floki.raw_html(inner_html, encode: false)}],
+          else: []
+
+      attrs_part =
+        for {attr_name, attr_pattern} <- attributes, contains_expression?(attr_pattern) do
+          case attr_name do
+            "@" <> prop_name ->
+              {:prop, tag, case_sensitive_prop_name(html, ampere, prop_name), attr_pattern}
+
+            _ ->
+              {:attr, tag, attr_name, attr_pattern}
+          end
+        end
+
+      {ampere, html_part ++ attrs_part}
+    end
+  end
+
+  defp find_ampere(attributes) do
+    {_, ampere} = Enum.find(attributes, fn {name, _} -> name == "trabant-ampere" end)
+    ampere
+  end
+
+  @expr_begin ~r/{{{{@trabant-expr-hash:(\S+)}}}}/
+  # @expr_end ~r/{{{{\/@trabant-expr-hash:\S+}}}}/
+  # @partial ~r/{{{{@trabant-partial:\S+}}}}/
+  defp contains_expression?(html) when is_binary(html) do
+    Regex.match?(@expr_begin, html)
+  end
+
+  defp contains_expression?(html) do
+    html |> Floki.raw_html(encode: false) |> contains_expression?()
+  end
+
+  @doc """
+  Finds a real property name (case sensitive), based on the attribute (lowercased) name
+  """
+  def case_sensitive_prop_name(html, ampere, prop_name) do
+    %Trabant.Tokenizer{tokenized: tokenized} = tokenize(html)
+
+    {_, body} =
+      Enum.find(tokenized, fn x ->
+        case x do
+          {gender, tag} when gender in [:tag, :non_closing_tag] ->
+            String.contains?(tag, "drab-ampere=\"#{ampere}\"")
+
+          _ ->
+            false
+        end
+      end)
+
+    [_, property] = Regex.run(~r/@(#{prop_name})\s*=/i, body)
+    property
+  end
+
+  @doc """
+  Converts buffer to html. Nested expressions are ignored.
+  """
+  # def to_flat_html({:safe, body}), do: to_flat_html(body)
+  def to_flat_html(body), do: body |> do_to_flat_html() |> List.flatten() |> Enum.join()
+
+  defp do_to_flat_html([]), do: []
+  defp do_to_flat_html(body) when is_binary(body), do: [body]
+  # tmp1 is in generating output expression <%= %>
+  defp do_to_flat_html(
+         {:__block__, [], [{:=, [], [{:tmp1, [], Drab.Live.EExEngine} | buffer]} | rest]}
+       ) do
+    do_to_flat_html(buffer) ++ do_to_flat_html(rest)
+  end
+
+  # while tmp2 inidcates the expression inside <% %>
+  defp do_to_flat_html(
+         {:__block__, [], [{:=, [], [{:tmp2, [], Drab.Live.EExEngine} | buffer]} | _]}
+       ) do
+    do_to_flat_html(buffer)
+  end
+
+  defp do_to_flat_html([head | rest]), do: do_to_flat_html(head) ++ do_to_flat_html(rest)
+  defp do_to_flat_html({_, _, list}) when is_list(list), do: do_to_flat_html(list)
+  defp do_to_flat_html({_, _, _}), do: []
+  defp do_to_flat_html(atom) when is_atom(atom), do: []
+  defp do_to_flat_html({_, buffer}), do: do_to_flat_html(buffer)
+  defp do_to_flat_html(_), do: []
 
   @doc false
   def hash(term) do
