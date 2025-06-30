@@ -33,7 +33,7 @@ defmodule Trabant.MixProject do
       {:jason, "~> 1.4"},
       {:phoenix_pubsub, "~> 2.0"},
       {:websockex, "~> 0.4"},
-      {:floki, "~> 0.3"},
+      # {:floki, "~> 0.37"},
       {:cubdb, "~> 2.0"}
       # {:telemetry, "~> 1.0"}
       # {:dialyxir, "~> 1.4"}
