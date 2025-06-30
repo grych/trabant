@@ -22,7 +22,8 @@ defmodule Trabant.Application do
        scheme: trabant_http[:scheme],
        ip: trabant_host_ip,
        port: trabant_http[:port]},
-      {Phoenix.PubSub, name: Trabant.PubSub}
+      {Phoenix.PubSub, name: Trabant.PubSub},
+      {CubDB, data_dir: "db/database.cubdb", name: :db}
       #  Registry.child_spec(
       #   keys: :duplicate,
       #   name: Registry.MyWebsocketApp

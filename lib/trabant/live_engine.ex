@@ -36,7 +36,7 @@ defmodule Trabant.LiveEngine do
   require Logger
 
   @impl true
-  def init(_opts) do
+  def init(opts) do
     # IO.inspect("INIT " <> inspect(opts))
     # unless opts[:file]
     #   |> Path.basename("eex")
@@ -49,19 +49,22 @@ defmodule Trabant.LiveEngine do
     #     Invalid extention of file: #{opts[:file]}.
     #     """
     # end
-
+    file = if opts[:file], do: opts[:file], else: "--online--"
+    # Logger.debug(inspect(file))
+    Trabant.Amperes.init(file)
     %{
       binary: [],
       dynamic: [],
       vars_count: 0,
-      trabant_amperes: []
+      amperes: [],
+      file: file
     }
   end
 
   @impl true
   def handle_body(state) do
     # IO.inspect("BODY1 " <> inspect(state))
-    %{binary: binary, dynamic: dynamic} = state
+    %{binary: binary, dynamic: dynamic, amperes: amperes} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
     # IO.inspect("BODY2 " <> inspect(state))
@@ -70,10 +73,21 @@ defmodule Trabant.LiveEngine do
     # body = List.flatten(dynamic)
     # Logger.debug(inspect(body))
     # found_amperes = Trabant.Tokenizer.amperes_from_buffer(body)
+    amperes = amperes_js(amperes)
 
-    # Logger.info(inspect(found_amperes))
+    Logger.debug(inspect(amperes))
+    # Logger.debug(inspect(dynamic))
+
+    # Logger.info(inspect(dynamic))
 
     {:__block__, [], dynamic}
+  end
+
+  defp amperes_js(amperes) do
+    a = amperes
+    |> Enum.map(fn x -> x.ampere end)
+    |> Enum.join(";")
+    "<script>" <> a <> "</script>"
   end
 
   @impl true
@@ -105,13 +119,14 @@ defmodule Trabant.LiveEngine do
     line = line_from_expr(ast)
 
     # EEx.Engine.handle_expr(state, "=", expr)
-    %{binary: binary, dynamic: dynamic, vars_count: vars_count, trabant_amperes: trabant_amperes} =
+    %{binary: binary, dynamic: dynamic, vars_count: vars_count, amperes: amperes, file: file} =
       state
 
     # binary_first = List.first(binary)
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
 
     ampere_id = Trabant.Tokenizer.hash(state)
+    # ampere_id = Enum.join(found_assigns, ",")
     ampere_attribute = "trabant_ampere=\"#{ampere_id}\""
 
     binary = Trabant.Tokenizer.deep_reverse(binary)
@@ -149,14 +164,17 @@ defmodule Trabant.LiveEngine do
         unquote(var) :: binary
       end
 
-    # Logger.debug(inspect([%{ampere: ampere_id, ast: ast, assigns: found_assigns} | trabant_amperes]))
+    # Logger.debug(inspect([%{ampere: ampere_id, ast: ast, assigns: found_assigns} | amperes]))
+
+    amperes = [%{ampere: ampere_id, ast: ast, assigns: found_assigns} | amperes]
+    Trabant.Amperes.put(file, amperes)
 
     %{
       state
       | dynamic: [ast | dynamic],
         binary: [segment | binary],
         vars_count: vars_count + 1,
-        trabant_amperes: [%{ampere: ampere_id, ast: ast, assigns: found_assigns} | trabant_amperes]
+        amperes: amperes
     }
   end
 

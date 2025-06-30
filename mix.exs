@@ -8,7 +8,8 @@ defmodule Trabant.MixProject do
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      elixirc_paths: elixirc_paths(Mix.env())
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: Mix.compilers()
     ]
   end
 
@@ -32,7 +33,8 @@ defmodule Trabant.MixProject do
       {:jason, "~> 1.4"},
       {:phoenix_pubsub, "~> 2.0"},
       {:websockex, "~> 0.4"},
-      {:floki, "~> 0.37"}
+      {:floki, "~> 0.3"},
+      {:cubdb, "~> 2.0"}
       # {:telemetry, "~> 1.0"}
       # {:dialyxir, "~> 1.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},
