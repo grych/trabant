@@ -51,7 +51,8 @@ defmodule Trabant.LiveEngine do
     # end
     file = if opts[:file], do: opts[:file], else: "--online--"
     # Logger.debug(inspect(file))
-    Trabant.Amperes.init(file)
+    # Trabant.Amperes.init(file)
+
     %{
       binary: [],
       dynamic: [],
@@ -64,7 +65,7 @@ defmodule Trabant.LiveEngine do
   @impl true
   def handle_body(state) do
     # IO.inspect("BODY1 " <> inspect(state))
-    %{binary: binary, dynamic: dynamic, amperes: amperes} = state
+    %{binary: binary, dynamic: dynamic, amperes: _amperes, file: _file} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
     # IO.inspect("BODY2 " <> inspect(state))
@@ -73,9 +74,9 @@ defmodule Trabant.LiveEngine do
     # body = List.flatten(dynamic)
     # Logger.debug(inspect(body))
     # found_amperes = Trabant.Tokenizer.amperes_from_buffer(body)
-    amperes = amperes_js(amperes)
+    # amperes = amperes_js(amperes)
 
-    Logger.debug(inspect(amperes))
+    # Logger.debug(inspect(amperes))
     # Logger.debug(inspect(dynamic))
 
     # Logger.info(inspect(dynamic))
@@ -83,12 +84,14 @@ defmodule Trabant.LiveEngine do
     {:__block__, [], dynamic}
   end
 
-  defp amperes_js(amperes) do
-    a = amperes
-    |> Enum.map(fn x -> x.ampere end)
-    |> Enum.join(";")
-    "<script>" <> a <> "</script>"
-  end
+  # defp amperes_js(amperes) do
+  #   a =
+  #     amperes
+  #     |> Enum.map(fn x -> x.ampere end)
+  #     |> Enum.join(";")
+
+  #   "<script>" <> a <> "</script>"
+  # end
 
   @impl true
   def handle_begin(state) do
@@ -119,7 +122,7 @@ defmodule Trabant.LiveEngine do
     line = line_from_expr(ast)
 
     # EEx.Engine.handle_expr(state, "=", expr)
-    %{binary: binary, dynamic: dynamic, vars_count: vars_count, amperes: amperes, file: file} =
+    %{binary: binary, dynamic: dynamic, vars_count: vars_count, amperes: amperes, file: _file} =
       state
 
     # binary_first = List.first(binary)
@@ -166,8 +169,8 @@ defmodule Trabant.LiveEngine do
 
     # Logger.debug(inspect([%{ampere: ampere_id, ast: ast, assigns: found_assigns} | amperes]))
 
-    amperes = [%{ampere: ampere_id, ast: ast, assigns: found_assigns} | amperes]
-    Trabant.Amperes.put(file, amperes)
+    amperes = [%{ast: ast, assigns: found_assigns} | amperes]
+    Trabant.Amperes.put(%{ampere: ampere_id}, amperes)
 
     %{
       state

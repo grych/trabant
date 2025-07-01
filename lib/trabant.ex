@@ -10,9 +10,10 @@ defmodule Trabant do
   @behaviour WebSock
 
   @impl true
-  def init(_opts) do
+  def init(opts) do
+    # IO.inspect(opts)
     # |> Keyword.merge([pid: self()])
-    socket = %Trabant.Socket{topic: "user:*", pid: self()}
+    socket = Map.merge(%Trabant.Socket{topic: "user:*", pid: self()}, opts)
     # Logger.info("INIT: #{inspect(socket)}")
     # for broadcasting:
     # Keyword.get(socket, :topic))

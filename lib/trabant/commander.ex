@@ -46,6 +46,7 @@ defmodule Trabant.Commander do
     # {:ok, value} = Trabant.Element.set_prop socket, "input", style: %{"backgroundColor" => "red", "width" => "200px"}
     # Logger.debug("VALUE: #{inspect(value)}")
 
+    Trabant.Live.peek(socket, :to_do)
     {:ok, socket}
   end
 end

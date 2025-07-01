@@ -7,8 +7,13 @@ defmodule Trabant.Router do
   plug(:dispatch)
 
   get "/" do
-    conn = conn |> Plug.Conn.assign(:to_do, "2 + 2")
-    # Logger.info(conn.assigns)
+    conn =
+      conn
+      |> Plug.Conn.assign(:to_do, "2 + 2")
+      |> Plug.Conn.assign(:__file_name, "lib/html/index.html.eex")
+
+    # IO.inspect(conn)
+
     send_resp(
       conn,
       200,
@@ -22,8 +27,8 @@ defmodule Trabant.Router do
     # conn = conn |> Plug.Conn.assign(:abc, "ABC")
     # Logger.info(conn)
     conn
-    |> WebSockAdapter.upgrade(Trabant, [], timeout: 1000 * 60 * 60 * 24, compress: true)
-    |> halt()
+    |> WebSockAdapter.upgrade(Trabant, %{conn: conn}, timeout: 1000 * 60 * 60 * 24, compress: true)
+    # |> halt()
   end
 
   match _ do
