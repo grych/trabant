@@ -1,7 +1,8 @@
 defmodule Trabant.Live do
   def peek(socket, _assign) do
-    file = socket.conn.assigns
-    IO.inspect(file)
+    # .assigns
+    assigns = socket.conn
+    IO.inspect(assigns)
     # {result, binding} = Code.eval_quoted()
   end
 end

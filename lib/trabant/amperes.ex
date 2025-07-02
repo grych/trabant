@@ -1,9 +1,9 @@
 defmodule Trabant.Amperes do
   require Logger
 
-  # def init(file) do
-  #   CubDB.delete(:db, file)
-  # end
+  def init(file) do
+    CubDB.delete(:db, file)
+  end
 
   def get(ampere) do
     CubDB.get(:db, ampere)

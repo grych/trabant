@@ -27,7 +27,11 @@ defmodule Trabant.Router do
     # conn = conn |> Plug.Conn.assign(:abc, "ABC")
     # Logger.info(conn)
     conn
-    |> WebSockAdapter.upgrade(Trabant, %{conn: conn}, timeout: 1000 * 60 * 60 * 24, compress: true)
+    |> WebSockAdapter.upgrade(Trabant, %{conn: conn},
+      timeout: 1000 * 60 * 60 * 24,
+      compress: true
+    )
+
     # |> halt()
   end
 

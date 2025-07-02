@@ -51,7 +51,7 @@ defmodule Trabant.LiveEngine do
     # end
     file = if opts[:file], do: opts[:file], else: "--online--"
     # Logger.debug(inspect(file))
-    # Trabant.Amperes.init(file)
+    Trabant.Amperes.init(file)
 
     %{
       binary: [],
@@ -65,7 +65,7 @@ defmodule Trabant.LiveEngine do
   @impl true
   def handle_body(state) do
     # IO.inspect("BODY1 " <> inspect(state))
-    %{binary: binary, dynamic: dynamic, amperes: _amperes, file: _file} = state
+    %{binary: binary, dynamic: dynamic, amperes: _amperes, file: file} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
     # IO.inspect("BODY2 " <> inspect(state))
@@ -74,24 +74,24 @@ defmodule Trabant.LiveEngine do
     # body = List.flatten(dynamic)
     # Logger.debug(inspect(body))
     # found_amperes = Trabant.Tokenizer.amperes_from_buffer(body)
-    # amperes = amperes_js(amperes)
 
-    # Logger.debug(inspect(amperes))
-    # Logger.debug(inspect(dynamic))
+    found_amperes = Trabant.Amperes.get(file)
+    Logger.debug(inspect(found_amperes))
 
-    # Logger.info(inspect(dynamic))
+    amperes_js = amperes_js(found_amperes)
+    Logger.debug(inspect(amperes_js))
 
     {:__block__, [], dynamic}
   end
 
-  # defp amperes_js(amperes) do
-  #   a =
-  #     amperes
-  #     |> Enum.map(fn x -> x.ampere end)
-  #     |> Enum.join(";")
+  defp amperes_js(amperes) do
+    a =
+      amperes
+      |> Enum.map(fn x -> x.ampere end)
+      |> Enum.join(";")
 
-  #   "<script>" <> a <> "</script>"
-  # end
+    "<script>" <> a <> "</script>"
+  end
 
   @impl true
   def handle_begin(state) do
@@ -122,7 +122,7 @@ defmodule Trabant.LiveEngine do
     line = line_from_expr(ast)
 
     # EEx.Engine.handle_expr(state, "=", expr)
-    %{binary: binary, dynamic: dynamic, vars_count: vars_count, amperes: amperes, file: _file} =
+    %{binary: binary, dynamic: dynamic, vars_count: vars_count, amperes: amperes, file: file} =
       state
 
     # binary_first = List.first(binary)
@@ -169,8 +169,15 @@ defmodule Trabant.LiveEngine do
 
     # Logger.debug(inspect([%{ampere: ampere_id, ast: ast, assigns: found_assigns} | amperes]))
 
-    amperes = [%{ast: ast, assigns: found_assigns} | amperes]
-    Trabant.Amperes.put(%{ampere: ampere_id}, amperes)
+    amperes1 = [%{ast: ast, assigns: found_assigns} | amperes]
+
+    amperes2 =
+      List.flatten([Trabant.Amperes.get(file)], [%{ampere: ampere_id, assigns: found_assigns}])
+      |> Enum.filter(&(!is_nil(&1)))
+
+    # amperes2 = CubDB.get_and_update(:db, file, fn x -> x end)
+    Trabant.Amperes.put(%{ampere: ampere_id}, amperes1)
+    Trabant.Amperes.put(file, amperes2)
 
     %{
       state
