@@ -49,7 +49,7 @@ defmodule Trabant.LiveEngine do
     #     Invalid extention of file: #{opts[:file]}.
     #     """
     # end
-    file = if opts[:file], do: opts[:file], else: "--online--"
+    file = if opts[:file], do: opts[:file], else: "nofile"
     # Logger.debug(inspect(file))
     Trabant.Amperes.init(file)
 
@@ -68,23 +68,27 @@ defmodule Trabant.LiveEngine do
     %{binary: binary, dynamic: dynamic, amperes: _amperes, file: file} = state
     binary = {:<<>>, [], Enum.reverse(binary)}
     dynamic = [binary | dynamic]
-    # IO.inspect("BODY2 " <> inspect(state))
-    dynamic = Enum.reverse(dynamic)
-
-    # body = List.flatten(dynamic)
-    # Logger.debug(inspect(body))
-    # found_amperes = Trabant.Tokenizer.amperes_from_buffer(body)
 
     found_amperes = Trabant.Amperes.get(file)
-    Logger.debug(inspect(found_amperes))
+    # Logger.debug(inspect(found_amperes))
 
     amperes_js = amperes_js(found_amperes)
-    Logger.debug(inspect(amperes_js))
+    # Logger.debug(inspect(amperes_js))
+
+    # dynamic = Enum.reverse(dynamic)
+    dynamic = dynamic
+      # |> Enum.reverse()
+      |> add_to_dynamic(amperes_js)
+      |> Enum.reverse()
 
     {:__block__, [], dynamic}
   end
 
-  defp amperes_js(amperes) do
+  defp add_to_dynamic([{:<<>>, middle_of_tuple, last_of_tuple} | last], amperes_js) do
+    [{:<<>>, middle_of_tuple, last_of_tuple ++ [amperes_js]} | last]
+  end
+
+  defp amperes_js(amperes) when is_list(amperes) do
     a =
       amperes
       |> Enum.map(fn x -> x.ampere end)
@@ -92,6 +96,8 @@ defmodule Trabant.LiveEngine do
 
     "<script>" <> a <> "</script>"
   end
+
+  defp amperes_js(_), do: ""
 
   @impl true
   def handle_begin(state) do
