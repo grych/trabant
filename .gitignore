@@ -21,3 +21,6 @@ trabant-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Database folder
+/db/
