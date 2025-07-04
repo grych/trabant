@@ -10,7 +10,7 @@ defmodule Trabant.Router do
     conn =
       conn
       |> Plug.Conn.assign(:to_do, "2 + 2")
-      |> Plug.Conn.assign(:__file_name, "lib/html/index.html.eex")
+      # |> Plug.Conn.assign(:__file_name, "lib/html/index.html.eex")
 
     # IO.inspect(conn)
 
@@ -26,6 +26,7 @@ defmodule Trabant.Router do
   get "/websocket" do
     # conn = conn |> Plug.Conn.assign(:abc, "ABC")
     # Logger.info(conn)
+    conn = conn |> Plug.Conn.assign(:__file_name, "lib/html/index.html.eex")
     conn
     |> WebSockAdapter.upgrade(Trabant, %{conn: conn},
       timeout: 1000 * 60 * 60 * 24,

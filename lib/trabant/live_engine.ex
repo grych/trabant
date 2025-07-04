@@ -78,23 +78,26 @@ defmodule Trabant.LiveEngine do
     # dynamic = Enum.reverse(dynamic)
     dynamic = dynamic
       # |> Enum.reverse()
-      |> add_to_dynamic(amperes_js)
+      |> add_first_to_dynamic(amperes_js)
       |> Enum.reverse()
 
     {:__block__, [], dynamic}
   end
 
-  defp add_to_dynamic([{:<<>>, middle_of_tuple, last_of_tuple} | last], amperes_js) do
+  defp add_first_to_dynamic([{:<<>>, middle_of_tuple, last_of_tuple} | last], amperes_js) do
     [{:<<>>, middle_of_tuple, last_of_tuple ++ [amperes_js]} | last]
   end
 
   defp amperes_js(amperes) when is_list(amperes) do
-    a =
-      amperes
-      |> Enum.map(fn x -> x.ampere end)
-      |> Enum.join(";")
+    Logger.debug(inspect(amperes))
+    # a =
+    #   amperes
+    #   |> Enum.map(fn x -> ~s(Trabant.assigns[") <> x.ampere <> ~s("] = [") <> ~s("];\r\n) end)
+    #   |> Enum.join("")
+    a = Jason.encode!(amperes)
+    a = "Trabant.assigns=" <> a <> "   ; console.log(1)"
 
-    "<script>" <> a <> "</script>"
+    "\r\n<script>" <> a <> "</script>"
   end
 
   defp amperes_js(_), do: ""
