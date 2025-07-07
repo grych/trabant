@@ -44,7 +44,7 @@ defmodule Trabant do
           |> List.last()
           |> String.to_atom()
 
-        # |> String.to_existing_atom()  # TODO
+        # |> String.to_existing_atom()  # TODO make it better
         module_name =
           string
           |> List.delete_at(-1)

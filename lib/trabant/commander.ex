@@ -1,6 +1,14 @@
 defmodule Trabant.Commander do
   require Logger
 
+  def onopen(socket, amperes) do
+    Logger.debug("              open")
+    # Logger.debug(inspect(amperes))
+    conn = Plug.Conn.assign(socket.conn, :__trabant_amperes, amperes)
+    socket = %{socket | conn: conn}
+    {:ok, socket}
+  end
+
   @doc """
   Search in sender for an sender_id (the id is created in HTML). Returns where.
 

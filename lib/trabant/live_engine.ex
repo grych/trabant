@@ -76,7 +76,8 @@ defmodule Trabant.LiveEngine do
     # Logger.debug(inspect(amperes_js))
 
     # dynamic = Enum.reverse(dynamic)
-    dynamic = dynamic
+    dynamic =
+      dynamic
       # |> Enum.reverse()
       |> add_first_to_dynamic(amperes_js)
       |> Enum.reverse()
@@ -94,10 +95,9 @@ defmodule Trabant.LiveEngine do
     #   amperes
     #   |> Enum.map(fn x -> ~s(Trabant.assigns[") <> x.ampere <> ~s("] = [") <> ~s("];\r\n) end)
     #   |> Enum.join("")
-    a = Jason.encode!(amperes)
-    a = "Trabant.assigns=" <> a <> "   ; console.log(1)"
-
-    "\r\n<script>" <> a <> "</script>"
+    "\n\n<script>" <>
+      "Trabant.amperes=" <>
+      Jason.encode!(amperes) <> "; console.log(Trabant.amperes)" <> "</script>"
   end
 
   defp amperes_js(_), do: ""
