@@ -8,11 +8,12 @@
 </style>
 
 <body>
+  <span><%= @to_do <> @bar %></span><br>
   <input id="input" type="text" trabant="input" value="<%= @to_do %>">
   <div id="my-div" trabant="my-div">Answer to the question</div>
   <br>
-  <input type="submit" value="click to send for the answer" id="my-button" trabant="click:Trabant.Commander.button_click">
-  <span><%= @to_do %></span>
+  <input type="submit" value="click to send for the answer" id="my-button" trabant="click:Trabant.Commander.button_click"><br>
+  <span><%= @bar %></span><br>
 </body>
 
 <script>

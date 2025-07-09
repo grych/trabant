@@ -10,6 +10,7 @@ defmodule Trabant.Router do
     conn =
       conn
       |> Plug.Conn.assign(:to_do, "2 + 2")
+      |> Plug.Conn.assign(:bar, "foo")
 
     # |> Plug.Conn.assign(:__trabant_file_name, "lib/html/index.html.eex")
 
