@@ -30,8 +30,8 @@ defmodule Trabant.Core do
     )
 
     receive do
-      # Logger.debug(json)
       json ->
+        # Logger.debug(inspect(json))
         {:ok, json}
     after
       Application.fetch_env!(:trabant, :browser_timeout) ->
