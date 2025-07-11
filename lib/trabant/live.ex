@@ -2,7 +2,7 @@ defmodule Trabant.Live do
   def peek(socket, assign) do
     # .assigns
     assigns = socket.conn.assigns
-    # IO.inspect(assign)
+    # IO.inspect(assigns)
     # {result, binding} = Code.eval_quoted()
     # IO.inspect(Trabant.Amperes.get(assigns.__trabant_file_name))
 
@@ -15,7 +15,7 @@ defmodule Trabant.Live do
 
     # IO.inspect(amperes)
 
-    # TODO: if there is a new, check it and do it something with it
+    # TODO: if there is not only one, check it and do it something with it
     ampere = List.first(amperes)
     js = ~s<Trabant.get_peek("#{ampere}")>
     # IO.inspect(js)

@@ -1,14 +1,41 @@
 defmodule Trabant.Commander do
   require Logger
 
-  def onopen(socket, amperes) do
-    Logger.debug("              open")
+  def on_open(socket, amperes) do
+    # IO.inspect(amperes)
     # Logger.debug(inspect(amperes))
     conn = Plug.Conn.assign(socket.conn, :__trabant_amperes, amperes)
     socket = %{socket | conn: conn}
+    # IO.inspect(socket.conn.assigns)
+    assigns = Enum.filter(socket.conn.assigns,
+      fn {x, _y} -> not String.starts_with?(Atom.to_string(x), "__")
+    end)
+    # IO.inspect(assigns)
+    assigns = Enum.map(assigns, fn {x, y} -> [Atom.to_string(x), y] end)
+    # IO.inspect(assigns)
+    # assigns = Enum.filter(f,
+    #   fn {x, _y} -> not String.starts_with?(Atom.to_string(x), "__")
+    # end)
+    amperes = for amperes <- socket.conn.assigns.__trabant_amperes, into: %{} do
+      {amperes["ampere"],
+        for as <- amperes["assigns"], into: %{} do
+          {as, values_of_assings(assigns, as)}
+        end
+      }
+    end
+    # IO.inspect(amperes)
+    {:ok, amperes} = Jason.encode(amperes)
+    # IO.inspect(amperes)
+    Trabant.Core.exec_js(socket, "Trabant.amperes = " <> amperes <> "; console.log(Trabant.amperes);")
     {:ok, socket}
   end
 
+  defp values_of_assings(assigns, assign) do
+    [_, value] = Enum.find(assigns, fn x -> List.first(x) == assign end)
+    value
+  end
+
+  @spec find_in_sender(any(), any(), any()) :: {:error} | {:ok, any()}
   @doc """
   Search in sender for an sender_id (the id is created in HTML). Returns where.
 
