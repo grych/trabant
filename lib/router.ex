@@ -11,6 +11,7 @@ defmodule Trabant.Router do
       conn
       |> Plug.Conn.assign(:to_do, "2 + 2")
       |> Plug.Conn.assign(:bar, "foo")
+      |> Plug.Conn.assign(:a, "a")
 
     # |> Plug.Conn.assign(:__trabant_file_name, "lib/html/index.html.eex")
 
@@ -29,10 +30,12 @@ defmodule Trabant.Router do
     # conn = conn |> Plug.Conn.assign(:abc, "ABC")
     # Logger.info(conn)
     conn = conn |> Plug.Conn.assign(:__trabant_file_name, "lib/html/index.html.eex")
+
     conn =
       conn
       |> Plug.Conn.assign(:to_do, "2 + 2")
       |> Plug.Conn.assign(:bar, "foo")
+      |> Plug.Conn.assign(:a, "a")
 
     conn
     |> WebSockAdapter.upgrade(Trabant, %{conn: conn},

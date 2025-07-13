@@ -8,7 +8,7 @@
 </style>
 
 <body>
-  <span><%= @to_do <> @bar %></span><br>
+  <span><%= @to_do <> @bar <> @a%></span><br>
   <input id="input" type="text" trabant="input" value="<%= @to_do %>">
   <div id="my-div" trabant="my-div">Answer to the question</div>
   <br>
