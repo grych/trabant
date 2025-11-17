@@ -88,6 +88,10 @@ defmodule Trabant.Commander do
 
     {:ok, get_peek} = Trabant.Live.peek(socket, :to_do)
     IO.inspect(get_peek)
+
+    {:ok, poked} = Trabant.Live.poke(socket, :to_do, "7")
+    IO.inspect(poked)
+
     {:ok, socket}
   end
 end

@@ -6,4 +6,7 @@ config :trabant,
 config :trabant,
   browser_timeout: 5_000
 
+config :typescript,
+  dirs: [Path.join(["lib", "ts"])]
+
 import_config "#{Mix.env()}.exs"

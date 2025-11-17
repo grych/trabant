@@ -29,4 +29,10 @@ defmodule Trabant.Live do
       _ -> {:ok, result}
     end
   end
+
+  def poke(socket, assign, what) do
+    js = ~s<Trabant.poke("#{assign}", "#{what}")>
+    result = Trabant.Core.exec_js(socket, js)
+    {:ok, result}
+  end
 end

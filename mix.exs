@@ -4,8 +4,8 @@ defmodule Trabant.MixProject do
   def project do
     [
       app: :trabant,
-      version: "0.1.2",
-      elixir: "~> 1.18",
+      version: "0.1.3",
+      elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -34,7 +34,8 @@ defmodule Trabant.MixProject do
       {:phoenix_pubsub, "~> 2.0"},
       {:websockex, "~> 0.4"},
       # {:floki, "~> 0.37"},
-      {:cubdb, "~> 2.0"}
+      {:cubdb, "~> 2.0"},
+      {:typescript, "~> 0.2.3", only: [:dev, :test]}
       # {:telemetry, "~> 1.0"}
       # {:dialyxir, "~> 1.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},
